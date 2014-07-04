@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+    <title>{{ post.title|truncate(100) }}</title>
+    <script src="{{ url_for('static', filename='js/jquery-2.1.1.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+<div class="container">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <p>
+
+            <h3 class="panel-title"> {{ post.title }} </h3></p>
+        </div>
+        {% autoescape false %}
+        {{ post.body }}
+        {% endautoescape %}
+        <div class="panel-footer">
+
+
+            <p class="btn-toolbar">
+                <span class="btn-group btn-group-justified">
+               <a href="{{ url_for('page_list') }}" class="btn btn-default btn-success"><span
+                    class="glyphicon glyphicon-arrow-left"></span> На главную</a>
+               <a href="{{ post.url }}" class="btn btn-default btn-primary"><span
+                    class="glyphicon glyphicon-globe"></span> Оригинал</a>
+
+               <a href="{{ url_for('del_page', page_id = post['id']) }}" class="btn btn-default btn-danger"><span
+                    class="glyphicon glyphicon-trash"></span> Удалить</a>
+              </span>
+
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
