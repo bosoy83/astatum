@@ -19,8 +19,8 @@
 
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="{{ url_for('page_list') }}">Home</a></li>
-                <li><a href={{ url_for('archive_page_list') }}>Archive</a></li>
+                <li><a href="{{ url_for('page_list') }}">Home</a></li>
+                <li class="active"><a href={{ url_for('archive_page_list') }}>Archive</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
         </div>
@@ -28,7 +28,6 @@
 </div>
 
 <div class="container">
-
     {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="alert alert-{{ category }} alert-dismissable">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -45,29 +44,12 @@
             <div class="list-group-item">
                 <table class="table table-responsive table-hover table-condensed table-striped">
 
-                    {#                    <thead>#}
-                    {#                    <tr>#}
-                    {#                        <th class="text-left"></th>#}
-                    {#                        <th class="text-left"></th>#}
-                    {#                        <th class="text-left"></th>#}
-                    {#                        <th class="text-center"><span class="glyphicon glyphicon-trash"></span></th>#}
-                    {#                    </tr>#}
-                    {#                    </thead>#}
-
                     <tbody>
                     {% for cur_row in tab_values %}
                         <tr>
 
-                            {#                            <td class="active text-left col-sm-2">{{ cur_row['time_stamp'].strftime("%Y-%m-%d %H:%M:%S") }}</td>#}
                             <td class="text-left"><a
                                     href="{{ url_for('view_page', page_id = cur_row['id']) }}">{{ cur_row['title']|truncate(120) }}</a>
-                            </td>
-
-                            <td class="text-center">
-                                <a title="В архив"
-                                   href="{{ url_for('save_page_to_archive', page_id = cur_row['id']) }}"
-                                   class="glyphicon glyphicon-download">
-                                </a>
                             </td>
 
                             <td class="text-center">
@@ -87,21 +69,11 @@
         <div class="panel-footer">
             <a ondragend="this.click();" title="Закладка: перетащите и опустите ссылку на панель закладок"
                href="javascript:{(function(){var%20url%20=%20location.href%20||%20url;window.open('{{ url_for('save_page', _external=True) }}?action=add&key={{ secret }}&url='%20+%20btoa(url),'_self');})();void(0);}"
-               class="btn btn-default btn-primary btn-sm btn-block"><span
-                    class="glyphicon glyphicon-plus-sign"></span>
+               class="btn btn-default btn-primary btn-sm btn-block"><span class="glyphicon glyphicon-plus-sign"></span>
                 В закладки!</a>
         </div>
 
     </div>
 </div>
-
 </body>
 </html>
-{#    {% for post in posts.items %}#}
-{#    {% endfor %}#}
-{#{% if posts.has_prev %}#}
-{#    <a href="{{ url_for('index', page = posts.prev_num) }}"><< Newer posts</a>#}
-{#{% else %}<< Newer posts#}
-{#{% endif %} |#}
-{#{% if posts.has_next %}<a href="{{ url_for('index', page = posts.next_num) }}">Older posts >></a>{% else %}Older posts#}
-{#    >>{% endif %}#}

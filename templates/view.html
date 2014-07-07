@@ -5,6 +5,28 @@
 </head>
 <body>
 
+<div role="navigation" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button data-target=".navbar-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="#" class="navbar-brand">Astatum</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="{{ url_for('page_list') }}">Home</a></li>
+                <li><a href={{ url_for('archive_page_list') }}>Archive</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="panel panel-primary">
         <div class="panel-heading">
@@ -21,12 +43,12 @@
             <p class="btn-toolbar">
                 <span class="btn-group btn-group-justified">
                <a href="{{ url_for('page_list') }}" class="btn btn-default btn-success"><span
-                    class="glyphicon glyphicon-arrow-left"></span> На главную</a>
+                       class="glyphicon glyphicon-arrow-left"></span> На главную</a>
                <a href="{{ post.url }}" class="btn btn-default btn-primary"><span
-                    class="glyphicon glyphicon-globe"></span> Оригинал</a>
+                       class="glyphicon glyphicon-globe"></span> Оригинал</a>
 
                <a href="{{ url_for('del_page', page_id = post['id']) }}" class="btn btn-default btn-danger"><span
-                    class="glyphicon glyphicon-trash"></span> Удалить</a>
+                       class="glyphicon glyphicon-trash"></span> Удалить</a>
               </span>
 
             </p>
