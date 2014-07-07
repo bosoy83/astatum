@@ -9,28 +9,27 @@
     {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="alert alert-{{ category }} alert-dismissable">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            <p>{{ message|truncate(80) }}</p>
+            <p>{{ message|truncate(100) }}</p>
         </div>
     {% endfor %}
 
     <div class="panel panel-primary">
         <div class="panel-heading">
-
-
-
+            <br>
         </div>
 
         <div class="list-group">
             <div class="list-group-item">
                 <table class="table table-responsive table-hover table-condensed table-striped">
 
-                    <thead>
-                    <tr>
-                        <th class="text-left"></th>
-                        <th class="text-left"></th>
+                    {#                    <thead>#}
+                    {#                    <tr>#}
+                    {#                        <th class="text-left"></th>#}
+                    {#                        <th class="text-left"></th>#}
+                    {#                        <th class="text-left"></th>#}
 {#                        <th class="text-center"><span class="glyphicon glyphicon-trash"></span></th>#}
-                    </tr>
-                    </thead>
+                    {#                    </tr>#}
+                    {#                    </thead>#}
 
                     <tbody>
                     {% for cur_row in tab_values %}
@@ -58,12 +57,14 @@
         <div class="panel-footer">
             <a ondragend="this.click();" title="Закладка: перетащите и опустите ссылку на панель закладок"
                href="javascript:{(function(){var%20url%20=%20location.href%20||%20url;window.open('{{ url_for('save_page', _external=True) }}?action=add&key={{ secret }}&url='%20+%20btoa(url),'_self');})();void(0);}"
-               class="btn btn-default btn-primary btn-sm btn-block"><span class="glyphicon glyphicon-plus-sign"></span> В
-                закладки!</a>
+               class="btn btn-default btn-primary btn-sm btn-block"><span
+                    class="glyphicon glyphicon-plus-sign"></span>
+                В закладки!</a>
         </div>
 
     </div>
 </div>
+
 </body>
 </html>
 {#    {% for post in posts.items %}#}
