@@ -84,7 +84,8 @@ def page_list():
     # todo pagination
     values = MainTable.query.filter_by(archived=False).order_by(MainTable.time_stamp.desc()).all()
     # values = MainTable.query.order_by(MainTable.time_stamp.desc()).paginate(page, 3, False)
-    return render_template('topic_list.html', title=u"Astatum - Список статей", tab_values=values, secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
+    return render_template('topic_list.html', title=u"Astatum - Список статей", tab_values=values,
+                           secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
 
 
 @app.route('/save', methods=['GET', 'POST'])
@@ -100,7 +101,8 @@ def save_page():
     #     flash(u'Добавлено: ' + parser_response.content['title'], 'success')
     #     return redirect(url_for('page_list'))
 
-    if request.method == 'GET' and request.args.get('action') and request.args.get('key') == hashlib.md5(config.APP_SECRET_KEY).hexdigest():
+    if request.method == 'GET' and request.args.get('action') and request.args.get('key') == hashlib.md5(
+            config.APP_SECRET_KEY).hexdigest():
         url = base64.decodestring(request.args.get('url'))
 
         if request.url_root == url:
@@ -122,12 +124,8 @@ def save_page():
 @app.route('/view', methods=['GET', 'POST'])
 @app.route('/view/<page_id>', methods=['GET', 'POST'])
 def view_page(page_id=1):
-    # if not request.args.get('next'):
     content = MainTable.query.get_or_404(page_id)
     return render_template('view.html', post=content)
-    # else:
-    #     print request.args.get('next')
-    #     return redirect(url_for(request.args.get('next')))
 
 
 @app.route('/del/<int:page_id>',  methods=['GET', 'POST'])
@@ -152,7 +150,8 @@ def save_page_to_archive(page_id):
 def archive_page_list():
     # todo pagination
     values = MainTable.query.filter_by(archived=True).order_by(MainTable.time_stamp.desc()).all()
-    return render_template('archive_list.html', title=u"Astatum - Архив", tab_values=values, secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
+    return render_template('archive_list.html', title=u"Astatum - Архив", tab_values=values,
+                           secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
 
 
 @app.route('/feed.atom')
@@ -162,9 +161,10 @@ def recent_feed():
     for article in articles:
         feed.add(article.title, unicode(article.body),
                  content_type='html',
-                 url=make_external(article.id),
+                 url=urljoin(request.url_root, url_for('view_page') + '/' + str(article.id)),
                  updated=article.time_stamp,
                  published=article.time_stamp)
+
     return feed.get_response()
 
 
@@ -188,11 +188,6 @@ def get_feed():
             db.session.add(add_feed)
             save_to_db(rss_url['link'], parser_response.content['title'], parser_response.content['content'])
             db.session.commit()
-
-
-def make_external(topic_id):
-    # todo упростить
-    return urljoin(request.url_root, 'view/' + str(topic_id))
 
 
 def save_to_db(page_url, page_title, page_body):
