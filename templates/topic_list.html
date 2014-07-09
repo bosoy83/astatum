@@ -24,8 +24,8 @@
                 <li class="active"><a href="{{ url_for('page_list') }}">
                     <span class="badge">{{ tab_values|length }}</span>
                     Home
-                </a>
-                <li><a href={{ url_for('archive_page_list') }}>
+                </a></li>
+                <li><a href="{{ url_for('archive_page_list') }}">
                     Archive
                 </a></li>
                 <li class="disabled"><a href="#">Contact</a></li>

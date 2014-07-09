@@ -20,12 +20,11 @@
 
         <div id="navbarCollapse" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li><a href={{ url_for('page_list') }}>
-
+                <li><a href="{{ url_for('page_list') }}">
                     Home
-                </a>
-                <li class="active"><a href={{ url_for('archive_page_list') }}>
-                <span class="badge">{{ tab_values|length }}</span>
+                </a></li>
+                <li class="active"><a href="{{ url_for('archive_page_list') }}">
+                    <span class="badge">{{ tab_values|length }}</span>
                     Archive
                 </a></li>
                 <li class="disabled"><a href="#">Contact</a></li>
