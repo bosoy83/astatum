@@ -5,61 +5,77 @@
 </head>
 
 <body>
-<nav role="navigation" class="navbar navbar-default navbar-fixed-top">
 
-    <div class="container">
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" data-target="#navbarCollapse" data-toggle="collapse" class="navbar-toggle">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a href="{{ url_for('page_list') }}" class="navbar-brand">Astatum</a>
+            <a class="navbar-brand" href="{{ url_for('page_list') }}">Astatum</a>
         </div>
-
-        <div id="navbarCollapse" class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="{{ url_for('page_list') }}">
-                    Home
-                </a></li>
-                <li class="active"><a href="{{ url_for('archive_page_list') }}">
-                    <span class="badge">{{ tab_values|length }}</span>
-                    Archive
-                </a></li>
-                <li class="disabled"><a href="#">Contact</a></li>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">About</a></li>
             </ul>
-
         </div>
     </div>
-</nav>
+</div>
 
-<div class="container">
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }} alert-dismissable">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            <p>{{ message|truncate(100) }}</p>
+<div class="container-fluid">
+
+
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <li><a href="{{ url_for('page_list') }}">Main</a></li>
+                <li class="active"><a href="{{ url_for('archive_page_list') }}"><span
+                        class="badge pull-right">{{ tab_values|length }}</span>Archive</a></li>
+                <li>
+                    <hr>
+                </li>
+                <li><a title="Закладка: перетащите и опустите ссылку на панель закладок"
+                       href="javascript:{(function(){var%20url%20=%20location.href%20||%20url;window.open('{{ url_for('save_page', _external=True) }}?action=add&key={{ secret }}&url='%20+%20btoa(url),'_self');})();void(0);}">
+                    <span class="glyphicon glyphicon-plus-sign"></span>
+                    В закладки!
+                </a>
+                </li>
+            </ul>
         </div>
-    {% endfor %}
 
-    <div class="panel panel-primary">
-        <div class="panel-heading">
-            <br>
-        </div>
-
-        <div class="list-group">
-            <div class="list-group-item">
-                <table class="table table-responsive table-hover table-condensed table-striped">
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% for category, message in get_flashed_messages(with_categories=true) %}
+                <div class="alert alert-{{ category }} alert-dismissable">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <p>{{ message|truncate(100) }}</p>
+                </div>
+            {% endfor %}
+            <h2 class="page-header">Архив статей</h2>
+            {#            <h2 class="sub-header">Список статей</h2>#}
+            <div class="table-responsive ">
+                <table class="table table-striped table-condensed">
 
                     <tbody>
                     {% for cur_row in tab_values %}
                         <tr>
 
-                            <td class="text-left"><a
-                                    href="{{ url_for('view_page', page_id = cur_row['id']) }}">{{ cur_row['title']|truncate(120) }}</a>
+                            <td>
+                                <span class="text-left">
+                                    <a href="{{ url_for('view_page', page_id = cur_row['id']) }}">
+                                        {{ cur_row['title']|truncate(120) }}
+                                    </a>
+                                </span>
+                                <span class="text-warning text-lowercase text-right">
+                                    <small>
+                                        {{ cur_row['url'] }}
+                                    </small>
+                                </span>
                             </td>
 
-                            <td class="text-center">
+                            <td class="text-center" style="vertical-align:middle">
                                 <a title="Удалить" href="{{ url_for('del_page', page_id = cur_row['id']) }}"
                                    class="glyphicon glyphicon-remove-circle red">
                                 </a>
@@ -67,20 +83,21 @@
 
                         </tr>
                     {% endfor %}
-                    </tbody>
 
+                    </tbody>
                 </table>
             </div>
         </div>
-
-        <div class="panel-footer">
-            <a ondragend="this.click();" title="Закладка: перетащите и опустите ссылку на панель закладок"
-               href="javascript:{(function(){var%20url%20=%20location.href%20||%20url;window.open('{{ url_for('save_page', _external=True) }}?action=add&key={{ secret }}&url='%20+%20btoa(url),'_self');})();void(0);}"
-               class="btn btn-default btn-primary btn-sm btn-block"><span class="glyphicon glyphicon-plus-sign"></span>
-                В закладки!</a>
-        </div>
-
     </div>
 </div>
+
 </body>
 </html>
+{#    {% for post in posts.items %}#}
+{#    {% endfor %}#}
+{#{% if posts.has_prev %}#}
+{#    <a href="{{ url_for('index', page = posts.prev_num) }}"><< Newer posts</a>#}
+{#{% else %}<< Newer posts#}
+{#{% endif %} |#}
+{#{% if posts.has_next %}<a href="{{ url_for('index', page = posts.next_num) }}">Older posts >></a>{% else %}Older posts#}
+{#    >>{% endif %}#}
