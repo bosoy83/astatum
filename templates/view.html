@@ -19,7 +19,6 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">About</a></li>
-                <li><a href="#">About</a></li>
             </ul>
         </div>
     </div>
@@ -34,7 +33,11 @@
                 <li>
                     <hr>
                 </li>
-                <li><a href="{{ post.url }}">Оригинал</a></li>
+                <li><a href="{{ post.url }}"><span class="glyphicon glyphicon-file"></span> Оригинал</a></li>
+                <li><a href="{{ url_for('save_page_to_archive', page_id = post['id']) }}"><span class="glyphicon glyphicon-bookmark"></span> В архив</a></li>
+                <li>
+                    <hr>
+                </li>
                 <li><a class="text-danger" href="{{ url_for('del_page', page_id = post['id']) }}"><span
                         class="glyphicon glyphicon-trash red"></span> Удалить</a></li>
             </ul>

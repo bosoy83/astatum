@@ -36,7 +36,7 @@ class ReverseProxied(object):
 
     In nginx:
     location /myprefix {
-            proxy_pass http://192.168.0.1:5001;
+            proxy_pass http://192.168.0.1:8002;
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Scheme $scheme;
@@ -66,8 +66,8 @@ class ReverseProxied(object):
 class MainTable(db.Model):
     __tablename__ = 'html'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
-    time_stamp = db.Column(db.DateTime, unique=False)
-    url = db.Column(db.String, nullable=False, unique=False)
+    time_stamp = db.Column(db.DateTime, unique=False, nullable=False)
+    url = db.Column(db.String, nullable=False, unique=True)
     title = db.Column(db.String, nullable=True, unique=False)
     body = db.Column(db.Text, nullable=True, unique=False)
     archived = db.Column(db.Boolean, unique=False, nullable=False, default=False)
@@ -76,15 +76,36 @@ class MainTable(db.Model):
 class Feeds(db.Model):
     __tablename__ = 'rss'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
-    url = db.Column(db.String, nullable=False, unique=False)
+    url = db.Column(db.String, nullable=False, unique=True)
+
+
+class Log(db.Model):
+    __tablename__ = 'log'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
+    time_stamp = db.Column(db.DateTime, unique=False, nullable=False)
+    src_key = db.Column(db.String, nullable=True, unique=False)
+    url = db.Column(db.String, nullable=True, unique=False)
+    title = db.Column(db.String, nullable=True, unique=False)
+
+
+@app.before_first_request
+def run():
+    db.create_all()
 
 
 @app.route('/')
 def page_list():
     # todo pagination
-    values = MainTable.query.filter_by(archived=False).order_by(MainTable.time_stamp.desc()).all()
-    # values = MainTable.query.order_by(MainTable.time_stamp.desc()).paginate(page, 3, False)
+    values = MainTable.query.filter_by(archived=False).with_entities(MainTable.id, MainTable.time_stamp, MainTable.url, MainTable.title).order_by(MainTable.time_stamp.desc()).all()
     return render_template('topic_list.html', title=u"Astatum - Список статей", tab_values=values,
+                           secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
+
+
+@app.route('/archive')
+def archive_page_list():
+    # todo pagination
+    values = MainTable.query.filter_by(archived=True).with_entities(MainTable.id, MainTable.time_stamp, MainTable.url, MainTable.title).order_by(MainTable.time_stamp.desc()).all()
+    return render_template('archive_list.html', title=u"Astatum - Архив", tab_values=values,
                            secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
 
 
@@ -110,11 +131,11 @@ def save_page():
 
         parser_client = ParserClient(readability_apy_key)
         parser_response = parser_client.get_article_content(url)
+        flash(u'Добавлено: ' + parser_response.content['title'], 'success')
 
+        write_log('add', url=url, title=parser_response.content['title'])
         save_to_db(url, parser_response.content['title'], parser_response.content['content'])
 
-        flash(u'Добавлено: ' + parser_response.content['title'], 'success')
-        app.logger.debug("[+] BTN %s" % url)
         return redirect(url_for('page_list'))
 
     else:
@@ -132,6 +153,7 @@ def view_page(page_id=1):
 def del_page(page_id):
     row = MainTable.query.get_or_404(page_id)
     flash(u'Удалено: ' + row.title, 'danger')
+    write_log('del', url=row.url, title=row.title)
     db.session.delete(row)
     db.session.commit()
     return redirect(url_for('page_list'))
@@ -141,17 +163,16 @@ def del_page(page_id):
 def save_page_to_archive(page_id):
     row = MainTable.query.get_or_404(page_id)
     row.archived = True
-    db.session.commit()
     flash(u'Помещено в архив: ' + row.title, 'warning')
+    write_log('arch', url=row.url, title=row.title)
+    db.session.commit()
     return redirect(url_for('page_list'))
 
 
-@app.route('/archive')
-def archive_page_list():
-    # todo pagination
-    values = MainTable.query.filter_by(archived=True).order_by(MainTable.time_stamp.desc()).all()
-    return render_template('archive_list.html', title=u"Astatum - Архив", tab_values=values,
-                           secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
+@app.route('/log')
+def log_page():
+    values = Log.query.order_by(Log.time_stamp.desc()).limit(100).all()
+    return render_template('log_list.html', title=u"Astatum - Log", tab_values=values)
 
 
 @app.route('/feed.atom')
@@ -172,26 +193,22 @@ def recent_feed():
 def get_feed():
     parsed_feed = feedparser.parse(config.RSS_FEED)
     parser_client = ParserClient(readability_apy_key)
-    db.create_all()
-    db_url_list = []
 
-    # получаем список feed URL из базы
     feed_urls_cached = Feeds.query.all()
 
-    for _ in feed_urls_cached:
-        db_url_list.append(_.url)
+    db_url_list = [cached_feed.url for cached_feed in feed_urls_cached]
 
     for rss_url in parsed_feed['entries']:
         if rss_url['link'] not in db_url_list:
             parser_response = parser_client.get_article_content(rss_url['link'])
             add_feed = Feeds(url=rss_url['link'])
+            write_log('rss', url=rss_url['link'], title=parser_response.content['title'])
             db.session.add(add_feed)
-            save_to_db(rss_url['link'], parser_response.content['title'], parser_response.content['content'])
+            if save_to_db(rss_url['link'], parser_response.content['title'], parser_response.content['content']):
             db.session.commit()
 
 
 def save_to_db(page_url, page_title, page_body):
-    db.create_all()
     try:
         row = MainTable(time_stamp=datetime.datetime.now(), url=page_url, body=page_body, title=page_title)
         db.session.add(row)
@@ -201,7 +218,29 @@ def save_to_db(page_url, page_title, page_body):
         return False
 
 
+def write_log(src_key, url, title):
+    if src_key == 'rss':
+        src_key = 'cloud-download'
+    elif src_key == 'del':
+        src_key = 'minus-sign'
+    elif src_key == 'add':
+        src_key = 'plus-sign'
+    elif src_key == 'arch':
+        src_key = 'bookmark'
+    else:
+        src_key = 'question-sign'
+
+    try:
+        row = Log(time_stamp=datetime.datetime.now(), url=url, src_key=src_key, title=title)
+        db.session.add(row)
+        db.session.commit()
+        return True
+    except:
+        return False
+
+
 if __name__ == '__main__':
+
     if config.RSS_CHECK_ENABLED:
         rss_sched.start()
     app.wsgi_app = ReverseProxied(app.wsgi_app)

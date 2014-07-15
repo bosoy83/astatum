@@ -34,6 +34,7 @@
                 <li class="active"><a href="{{ url_for('page_list') }}"><span
                         class="badge pull-right">{{ tab_values|length }}</span>Main</a></li>
                 <li><a href="{{ url_for('archive_page_list') }}">Archive</a></li>
+                <li><a href="{{ url_for('log_page') }}">Log</a></li>
                 <li>
                     <hr>
                 </li>
@@ -47,17 +48,18 @@
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
             {% for category, message in get_flashed_messages(with_categories=true) %}
                 <div class="alert alert-{{ category }} alert-dismissable">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     <p>{{ message|truncate(100) }}</p>
                 </div>
             {% endfor %}
-            <h2 class="page-header">Список статей</h2>
 
-            {#            <h2 class="sub-header">Список статей</h2>#}
-            <div class="table-responsive ">
-                <table class="table table-striped table-condensed">
+{#            <h2 class="page-header">Список статей</h2>#}
+
+            <div class="container-fluid main">
+                <table class="table table-responsive table-striped table-condensed">
 
                     <tbody>
                     {% for cur_row in tab_values %}
@@ -69,7 +71,7 @@
                                         {{ cur_row['title']|truncate(120) }}
                                     </a>
                                 </span>
-                                    <span class="text-warning text-lowercase text-right">
+                                <span class="text-warning text-lowercase text-right">
                                     <small>
                                         {{ cur_row['url'] }}
                                     </small>
@@ -79,7 +81,7 @@
                             <td class="text-center" style="vertical-align:middle">
                                 <a title="В архив"
                                    href="{{ url_for('save_page_to_archive', page_id = cur_row['id']) }}"
-                                   class="glyphicon glyphicon-download">
+                                   class="glyphicon glyphicon-bookmark">
                                 </a>
                             </td>
 
@@ -90,11 +92,14 @@
                             </td>
 
                         </tr>
-                    {% endfor %}
 
+                    {% endfor %}
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
     </div>
 </div>

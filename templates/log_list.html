@@ -27,34 +27,18 @@
 
 <div class="container-fluid">
 
+
     <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
             <ul class="nav nav-sidebar">
                 <li><a href="{{ url_for('page_list') }}">Main</a></li>
-                <li class="active"><a href="{{ url_for('archive_page_list') }}"><span
-                        class="badge pull-right">{{ tab_values|length }}</span>Archive</a></li>
-                <li><a href="{{ url_for('log_page') }}">Log</a></li>
-
-                <li>
-                    <hr>
-                </li>
-
-                <li><a title="Закладка: перетащите и опустите ссылку на панель закладок"
-                       href="javascript:{(function(){var%20url%20=%20location.href%20||%20url;window.open('{{ url_for('save_page', _external=True) }}?action=add&key={{ secret }}&url='%20+%20btoa(url),'_self');})();void(0);}">
-                    <span class="glyphicon glyphicon-plus-sign"></span>
-                    В закладки!</a>
-                </li>
+                <li><a href="{{ url_for('archive_page_list') }}">Archive</a></li>
+                <li class="active"><a href="{{ url_for('log_page') }}">Log</a></li>
             </ul>
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-            {% for category, message in get_flashed_messages(with_categories=true) %}
-                <div class="alert alert-{{ category }} alert-dismissable">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    <p>{{ message|truncate(100) }}</p>
-                </div>
-            {% endfor %}
-{#            <h2 class="page-header">Архив статей</h2>#}
+{#            <h2 class="page-header">Log</h2>#}
 
             <div class="container-fluid main">
                 <table class="table table-responsive table-striped table-condensed ">
@@ -63,23 +47,18 @@
                     {% for cur_row in tab_values %}
                         <tr>
 
-                            <td>
-                                <span class="text-left">
-                                    <a href="{{ url_for('view_page', page_id = cur_row['id']) }}">
-                                        {{ cur_row['title']|truncate(120) }}
-                                    </a>
-                                </span>
-                                <span class="text-warning text-lowercase text-right">
-                                    <small>
-                                        {{ cur_row['url'] }}
-                                    </small>
-                                </span>
+                            <td class="active text-center">
+                                <div class="text-info glyphicon glyphicon-{{ cur_row['src_key'] }}"></div>
                             </td>
 
-                            <td class="text-center" style="vertical-align:middle">
-                                <a title="Удалить" href="{{ url_for('del_page', page_id = cur_row['id']) }}"
-                                   class="glyphicon glyphicon-remove-circle red">
-                                </a>
+                            <td class="text-center">
+                                <b>{{ cur_row['time_stamp'].strftime('%Y-%m-%d %H:%M') }}</b>
+                            </td>
+
+                            <td>
+                                <span class="text-left">
+                                        <a href="{{ cur_row['url'] }}">{{ cur_row['title']|truncate(100) }}</a>
+                                </span>
                             </td>
 
                         </tr>
