@@ -38,7 +38,7 @@
                 <li>
                     <hr>
                 </li>
-                <li><a class="text-danger" href="{{ url_for('del_page', page_id = post['id']) }}"><span
+                <li><a class="text-danger" href="{{ url_for('del_page', page_id = post['id'], next = ref) }}"><span
                         class="glyphicon glyphicon-trash red"></span> Удалить</a></li>
             </ul>
         </div>

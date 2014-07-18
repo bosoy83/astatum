@@ -146,7 +146,7 @@ def save_page():
 @app.route('/view/<page_id>', methods=['GET', 'POST'])
 def view_page(page_id=1):
     content = MainTable.query.get_or_404(page_id)
-    return render_template('view.html', post=content)
+    return render_template('view.html', post=content, ref=request.referrer)
 
 
 @app.route('/del/<int:page_id>',  methods=['GET', 'POST'])
@@ -156,7 +156,7 @@ def del_page(page_id):
     write_log('del', url=row.url, title=row.title)
     db.session.delete(row)
     db.session.commit()
-    return redirect(url_for('page_list'))
+    return redirect(redirect_url())
 
 
 @app.route('/archive/<int:page_id>')
@@ -206,6 +206,12 @@ def get_feed():
             db.session.add(add_feed)
             if save_to_db(rss_url['link'], parser_response.content['title'], parser_response.content['content']):
             db.session.commit()
+
+
+def redirect_url(default='page_list'):
+    return request.args.get('next') or \
+        request.referrer or \
+        url_for(default)
 
 
 def save_to_db(page_url, page_title, page_body):
