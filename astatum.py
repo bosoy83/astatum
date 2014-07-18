@@ -21,7 +21,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_URI
 app.config['SQLALCHEMY_ECHO'] = config.SQLALCHEMY_ECHO
 app.secret_key = config.APP_SECRET_KEY
 
-readability_apy_key = config.READABILITY_API_KEY
+readability_api_key = config.READABILITY_API_KEY
 
 db = SQLAlchemy(app)
 rss_sched = Scheduler()
@@ -67,8 +67,8 @@ class MainTable(db.Model):
     __tablename__ = 'html'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
     time_stamp = db.Column(db.DateTime, unique=False, nullable=False)
-    url = db.Column(db.String, nullable=False, unique=True)
-    title = db.Column(db.String, nullable=True, unique=False)
+    url = db.Column(db.String(200), nullable=False, unique=True)
+    title = db.Column(db.String(300), nullable=True, unique=False)
     body = db.Column(db.Text, nullable=True, unique=False)
     archived = db.Column(db.Boolean, unique=False, nullable=False, default=False)
 
@@ -76,16 +76,16 @@ class MainTable(db.Model):
 class Feeds(db.Model):
     __tablename__ = 'rss'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
-    url = db.Column(db.String, nullable=False, unique=True)
+    url = db.Column(db.String(200), nullable=False, unique=True)
 
 
 class Log(db.Model):
     __tablename__ = 'log'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
     time_stamp = db.Column(db.DateTime, unique=False, nullable=False)
-    src_key = db.Column(db.String, nullable=True, unique=False)
-    url = db.Column(db.String, nullable=True, unique=False)
-    title = db.Column(db.String, nullable=True, unique=False)
+    src_key = db.Column(db.String(20), nullable=True, unique=False)
+    url = db.Column(db.String(200), nullable=True, unique=False)
+    title = db.Column(db.String(300), nullable=True, unique=False)
 
 
 @app.before_first_request
@@ -129,16 +129,13 @@ def save_page():
         if request.url_root == url:
             return redirect(url_for('page_list'))
 
-        parser_client = ParserClient(readability_apy_key)
+        parser_client = ParserClient(readability_api_key)
         parser_response = parser_client.get_article_content(url)
         flash(u'Добавлено: ' + parser_response.content['title'], 'success')
 
         write_log('add', url=url, title=parser_response.content['title'])
         save_to_db(url, parser_response.content['title'], parser_response.content['content'])
 
-        return redirect(url_for('page_list'))
-
-    else:
         return redirect(url_for('page_list'))
 
 
@@ -192,7 +189,7 @@ def recent_feed():
 @rss_sched.interval_schedule(minutes=config.INTERVAL)
 def get_feed():
     parsed_feed = feedparser.parse(config.RSS_FEED)
-    parser_client = ParserClient(readability_apy_key)
+    parser_client = ParserClient(readability_api_key)
 
     feed_urls_cached = Feeds.query.all()
 
