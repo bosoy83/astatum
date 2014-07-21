@@ -9,8 +9,11 @@ Astatum
 
 ## Установка
 ```sh
+$ mkdir /srv
+$ cd /srv
 $ git clone https://github.com/x0x01/astatum.git
 $ cd astatum
+$ chmod 777 static/img
 $ pip install -r requirements.txt
 Отредактировать config.py
 $ python astatum.py
@@ -18,10 +21,11 @@ $ python astatum.py
 
 ## Возможности
 - Трансляция полного текста статей в RSS
-- Кнопка "В закладки!", позволяющая сохранить любую открытую в браузере статью
-- Получение и хранение полного текста статей из RSS ленты
+- Кнопка "В закладки!", позволяющая сохранить открытую в браузере статью
+- Загрузка статей из RSS ленты
+- Кэширование изображений
 - Используется парсер readability
-- Python, Flask, SQLalchemy, Bootstrap 3
+- Python, Flask, SQLAlchemy, Bootstrap 3
 
 ## UseCase
 В [TinyTinyRSS](http://tt-rss.org/redmine/projects/tt-rss/wiki) есть собственная RSS лента избанных статей. 

@@ -1,9 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import os
+
 
 BIND_ADDR = '0.0.0.0'
 BIND_PORT = 8002
+APP_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # session enc key, any random string
 APP_SECRET_KEY = ""
@@ -11,12 +14,13 @@ APP_SECRET_KEY = ""
 # https://www.readability.com/developers/api/reader
 READABILITY_API_KEY = ''
 
+CACHE_IMAGES = True
+
 # DATABASE_URI = 'postgresql://scott:secret@localhost/mydatabase'
 # DATABASE_URI = 'mysql://scott:secret@localhost/mydatabase'
 # DATABASE_URI = 'sqlite:////absolute/path/to/foo.db'
 
 # appfog config
-# import os
 # import json
 # services = json.loads(os.getenv("VCAP_SERVICES", "{}"))
 # mysql_env = services["mysql-5.1"][0]["credentials"]

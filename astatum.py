@@ -5,6 +5,11 @@ import datetime
 import base64
 from urlparse import urljoin
 import hashlib
+import re
+import os
+import urllib2
+import thread
+import glob
 
 import feedparser
 from flask import Flask, flash, redirect, request, render_template, url_for
@@ -153,6 +158,10 @@ def del_page(page_id):
     write_log('del', url=row.url, title=row.title)
     db.session.delete(row)
     db.session.commit()
+
+    for fl in glob.glob(os.path.join(config.APP_PATH, 'static', 'img', str(page_id) + '*.*')):
+        os.remove(fl)
+
     return redirect(redirect_url())
 
 
@@ -206,19 +215,56 @@ def get_feed():
 
 
 def redirect_url(default='page_list'):
-    return request.args.get('next') or \
-        request.referrer or \
-        url_for(default)
+    return request.args.get('next') or request.referrer or url_for(default)
 
 
 def save_to_db(page_url, page_title, page_body):
     try:
+        if config.CACHE_IMAGES:
+            row = MainTable(time_stamp=datetime.datetime.now(), url=page_url, body="", title=page_title)
+            db.session.add(row)
+            db.session.commit()
+
+            page_body = cache_images(page_body, row.id)
+
+            update_row = MainTable.query.filter_by(id=row.id).first()
+            update_row.body = page_body
+            db.session.commit()
+        else:
         row = MainTable(time_stamp=datetime.datetime.now(), url=page_url, body=page_body, title=page_title)
         db.session.add(row)
         db.session.commit()
-        return True
     except:
-        return False
+        db.session.rollback()
+
+
+def cache_images(html_body, row_id):
+    def get_img_urls():
+        match = re.compile(r'img src="(.*?)"')
+        return re.findall(match, html_body)
+
+    def download_images(urls):
+        output = []
+
+        def dwl_worker(d_url):
+            img_content = urllib2.urlopen(d_url).read()
+            with open(os.path.join(config.APP_PATH, 'static', 'img', '%i_%s' % (row_id, os.path.basename(d_url))), "wb+") as img_file:
+                img_file.write(img_content)
+            img_file.close()
+
+        for url in urls:
+            output.append((url, url_for('static', filename='img/' + "%i_%s" % (row_id, os.path.basename(url)))))
+            thread.start_new_thread(dwl_worker, (url,))
+        return output
+
+    def replace_urls_in_html(url_arr, body):
+        for old_url, new_url in url_arr:
+            body = body.replace(old_url, new_url)
+        return body
+
+    img_urls = get_img_urls()
+    old_new_urls = download_images(img_urls)
+    return replace_urls_in_html(old_new_urls, html_body)
 
 
 def write_log(src_key, url, title):
@@ -243,7 +289,6 @@ def write_log(src_key, url, title):
 
 
 if __name__ == '__main__':
-
     if config.RSS_CHECK_ENABLED:
         rss_sched.start()
     app.wsgi_app = ReverseProxied(app.wsgi_app)
