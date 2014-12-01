@@ -10,6 +10,7 @@ import os
 import urllib2
 import thread
 import glob
+import logging
 
 import feedparser
 from flask import Flask, flash, redirect, request, render_template, url_for
@@ -101,7 +102,9 @@ def run():
 @app.route('/')
 def page_list():
     # todo pagination
-    values = MainTable.query.filter_by(archived=False).with_entities(MainTable.id, MainTable.time_stamp, MainTable.url, MainTable.title).order_by(MainTable.time_stamp.desc()).all()
+    values = MainTable.query.filter_by(archived=False).with_entities(MainTable.id, MainTable.time_stamp, MainTable.url,
+                                                                     MainTable.title).order_by(
+        MainTable.time_stamp.desc()).all()
     return render_template('topic_list.html', title=u"Astatum - Список статей", tab_values=values,
                            secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
 
@@ -109,7 +112,9 @@ def page_list():
 @app.route('/archive')
 def archive_page_list():
     # todo pagination
-    values = MainTable.query.filter_by(archived=True).with_entities(MainTable.id, MainTable.time_stamp, MainTable.url, MainTable.title).order_by(MainTable.time_stamp.desc()).all()
+    values = MainTable.query.filter_by(archived=True).with_entities(MainTable.id, MainTable.time_stamp, MainTable.url,
+                                                                    MainTable.title).order_by(
+        MainTable.time_stamp.desc()).all()
     return render_template('archive_list.html', title=u"Astatum - Архив", tab_values=values,
                            secret=hashlib.md5(config.APP_SECRET_KEY).hexdigest())
 
@@ -117,7 +122,7 @@ def archive_page_list():
 @app.route('/save', methods=['GET', 'POST'])
 def save_page():
     # if request.method == 'POST':
-    #     url = request.form['url']
+    # url = request.form['url']
     #
     #     parser_client = ParserClient(readability_apy_key)
     #     parser_response = parser_client.get_article_content(url)
@@ -131,17 +136,23 @@ def save_page():
             config.APP_SECRET_KEY).hexdigest():
         url = base64.decodestring(request.args.get('url'))
 
-        if request.url_root == url:
-            return redirect(url_for('page_list'))
+        def get_page_content():
+            parser_client = ParserClient(readability_api_key)
+            parser_response = parser_client.get_article_content(url)
+            return parser_response
 
-        parser_client = ParserClient(readability_api_key)
-        parser_response = parser_client.get_article_content(url)
-        flash(u'Добавлено: ' + parser_response.content['title'], 'success')
+        for counter in xrange(3):
+            page_content = get_page_content()
+            if len(page_content.content['content']) > 10:
+                flash(u'Добавлено: ' + page_content.content['title'], 'success')
+                write_action_log('add', url=url, title=page_content.content['title'])
+                save_to_db(url, page_content.content['title'], page_content.content['content'])
+                break
+            else:
+                flash(u'Ошибка добавления: ' + page_content.content['title'], 'danger')
+                write_action_log('add', url=url, title="Adding error...")
 
-        write_log('add', url=url, title=parser_response.content['title'])
-        save_to_db(url, parser_response.content['title'], parser_response.content['content'])
-
-        return redirect(url_for('page_list'))
+    return redirect(url_for('page_list'))
 
 
 @app.route('/view', methods=['GET', 'POST'])
@@ -151,11 +162,11 @@ def view_page(page_id=1):
     return render_template('view.html', post=content, ref=request.referrer)
 
 
-@app.route('/del/<int:page_id>',  methods=['GET', 'POST'])
+@app.route('/del/<int:page_id>', methods=['GET', 'POST'])
 def del_page(page_id):
     row = MainTable.query.get_or_404(page_id)
     flash(u'Удалено: ' + row.title, 'danger')
-    write_log('del', url=row.url, title=row.title)
+    write_action_log('del', url=row.url, title=row.title)
     db.session.delete(row)
     db.session.commit()
 
@@ -170,7 +181,7 @@ def save_page_to_archive(page_id):
     row = MainTable.query.get_or_404(page_id)
     row.archived = True
     flash(u'Помещено в архив: ' + row.title, 'warning')
-    write_log('arch', url=row.url, title=row.title)
+    write_action_log('arch', url=row.url, title=row.title)
     db.session.commit()
     return redirect(url_for('page_list'))
 
@@ -195,23 +206,42 @@ def recent_feed():
     return feed.get_response()
 
 
-@rss_sched.interval_schedule(minutes=config.INTERVAL)
+
+
+@rss_sched.scheduled_job('interval', minutes=config.INTERVAL)
 def get_feed():
+    logging.warning('get_feed: RSS check...')
     parsed_feed = feedparser.parse(config.RSS_FEED)
     parser_client = ParserClient(readability_api_key)
 
     feed_urls_cached = Feeds.query.all()
 
     db_url_list = [cached_feed.url for cached_feed in feed_urls_cached]
+    logging.warning('get_feed: db urls count {}'.format(len(db_url_list)))
 
     for rss_url in parsed_feed['entries']:
         if rss_url['link'] not in db_url_list:
+            logging.warning('get_feed: Added from rss: {}'.format(rss_url['link']))
             parser_response = parser_client.get_article_content(rss_url['link'])
-            add_feed = Feeds(url=rss_url['link'])
-            write_log('rss', url=rss_url['link'], title=parser_response.content['title'])
-            db.session.add(add_feed)
-            if save_to_db(rss_url['link'], parser_response.content['title'], parser_response.content['content']):
-            db.session.commit()
+
+            try:
+                logging.warning('get_feed: Data len {}'.format(len(parser_response.content['content'])))
+                save_to_db(rss_url['link'], parser_response.content['title'], parser_response.content['content'])
+                add_feed = Feeds(url=rss_url['link'])
+
+                db.session.add(add_feed)
+                db.session.commit()
+
+                write_action_log('rss', url=rss_url['link'], title=parser_response.content['title'])
+
+            except KeyError, e:
+                logging.warning('get_feed: ERR {}, no content'.format(e))
+                db.session.rollback()
+                add_feed = Feeds(url=rss_url['link'])
+                db.session.add(add_feed)
+                db.session.commit()
+
+                write_action_log('rss', url=rss_url['link'], title="Err parse, no title")
 
 
 def redirect_url(default='page_list'):
@@ -219,23 +249,34 @@ def redirect_url(default='page_list'):
 
 
 def save_to_db(page_url, page_title, page_body):
-    try:
-        if config.CACHE_IMAGES:
+    if config.CACHE_IMAGES:
+        try:
+            # добавление поста в базу при включеном кэшировании изображений
             row = MainTable(time_stamp=datetime.datetime.now(), url=page_url, body="", title=page_title)
             db.session.add(row)
             db.session.commit()
 
+            logging.warning('save_to_db: OK, adding without body')
+            # row.id передается для сохранения изображени с именем поста из базы, для очистки кэша при удалении
             page_body = cache_images(page_body, row.id)
 
             update_row = MainTable.query.filter_by(id=row.id).first()
             update_row.body = page_body
             db.session.commit()
-        else:
-        row = MainTable(time_stamp=datetime.datetime.now(), url=page_url, body=page_body, title=page_title)
-        db.session.add(row)
-        db.session.commit()
-    except:
-        db.session.rollback()
+            logging.warning('save_to_db: OK, with img cache, upd record id {}'.format(row.id))
+        except Exception as inst:
+            logging.warning('save_to_db: ERR, with img cache, {}'.format(inst))
+            db.session.remove()
+    else:
+        try:
+            # добавление поста в базу при выключеном кэшировании изображений
+            row = MainTable(time_stamp=datetime.datetime.now(), url=page_url, body=page_body, title=page_title)
+            logging.warning("save_to_db: OK, without img cache")
+            db.session.add(row)
+            db.session.commit()
+        except Exception as inst:
+            logging.warning("save_to_db: ERR, without img cache, {}".format(inst))
+            db.session.remove()
 
 
 def cache_images(html_body, row_id):
@@ -243,18 +284,27 @@ def cache_images(html_body, row_id):
         match = re.compile(r'img src="(.*?)"')
         return re.findall(match, html_body)
 
-    def download_images(urls):
+    def download_images(img_url_list):
         output = []
 
         def dwl_worker(d_url):
             img_content = urllib2.urlopen(d_url).read()
-            with open(os.path.join(config.APP_PATH, 'static', 'img', '%i_%s' % (row_id, os.path.basename(d_url))), "wb+") as img_file:
+            with open(os.path.join(config.APP_PATH, 'static', 'img', '%i_%s' % (row_id, os.path.basename(d_url))),
+                      "wb+") as img_file:
                 img_file.write(img_content)
             img_file.close()
 
-        for url in urls:
-            output.append((url, url_for('static', filename='img/' + "%i_%s" % (row_id, os.path.basename(url)))))
+        for url in img_url_list:
+            # хак для определения контекста, нужен для url_for
+            try:
+                output.append((url, url_for('static', filename='img/' + "%i_%s" % (row_id, os.path.basename(url)))))
+            except:
+                ctx = app.test_request_context('/')
+                ctx.push()
+                output.append((url, url_for('static', filename='img/' + "%i_%s" % (row_id, os.path.basename(url)))))
             thread.start_new_thread(dwl_worker, (url,))
+
+        logging.warning("download_images: {}".format(output))
         return output
 
     def replace_urls_in_html(url_arr, body):
@@ -267,7 +317,7 @@ def cache_images(html_body, row_id):
     return replace_urls_in_html(old_new_urls, html_body)
 
 
-def write_log(src_key, url, title):
+def write_action_log(src_key, url, title):
     if src_key == 'rss':
         src_key = 'cloud-download'
     elif src_key == 'del':
@@ -292,4 +342,5 @@ if __name__ == '__main__':
     if config.RSS_CHECK_ENABLED:
         rss_sched.start()
     app.wsgi_app = ReverseProxied(app.wsgi_app)
+    app.jinja_env.cache = {}
     app.run(host=config.BIND_ADDR, debug=config.DEBUG, port=config.BIND_PORT)
