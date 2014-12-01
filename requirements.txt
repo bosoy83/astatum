@@ -1,6 +1,7 @@
-APScheduler==2.1.2
-Flask==0.10.1
-Flask-SQLAlchemy==1.0
+APScheduler
+Flask
+Flask-SQLAlchemy
+SQLAlchemy
 cssselect==0.9.1
 feedparser==5.1.3
 readability-api==0.2.4
