@@ -16,7 +16,7 @@ from flask import Flask, flash, redirect, request, render_template, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 from readability import ParserClient
 from werkzeug.contrib.atom import AtomFeed
-from apscheduler.scheduler import Scheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 import config
 
@@ -29,7 +29,7 @@ app.secret_key = config.APP_SECRET_KEY
 readability_api_key = config.READABILITY_API_KEY
 
 db = SQLAlchemy(app)
-rss_sched = Scheduler()
+rss_sched = BackgroundScheduler()
 
 
 class ReverseProxied(object):
