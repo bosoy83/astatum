@@ -70,9 +70,9 @@ class ReverseProxied(object):
 
 class MainTable(db.Model):
     __tablename__ = 'html'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True, index=True)
     time_stamp = db.Column(db.DateTime, unique=False, nullable=False)
-    url = db.Column(db.String(200), nullable=False, unique=True)
+    url = db.Column(db.String(200), nullable=False, unique=True, index=True)
     title = db.Column(db.String(300), nullable=True, unique=False)
     body = db.Column(db.Text, nullable=True, unique=False)
     archived = db.Column(db.Boolean, unique=False, nullable=False, default=False)
@@ -80,16 +80,16 @@ class MainTable(db.Model):
 
 class Feeds(db.Model):
     __tablename__ = 'rss'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
-    url = db.Column(db.String(200), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True, index=True)
+    url = db.Column(db.String(200), nullable=False, unique=True, index=True)
 
 
 class Log(db.Model):
     __tablename__ = 'log'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True, index=True)
     time_stamp = db.Column(db.DateTime, unique=False, nullable=False)
     src_key = db.Column(db.String(20), nullable=True, unique=False)
-    url = db.Column(db.String(200), nullable=True, unique=False)
+    url = db.Column(db.String(200), nullable=True, unique=False, index=True)
     title = db.Column(db.String(300), nullable=True, unique=False)
 
 
