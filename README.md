@@ -8,6 +8,7 @@ Astatum
 ![](http://cl.ly/image/2j1B1u2A3G45/Image%202014-07-18%20at%2010.04.18%20%D0%B4%D0%BE%20%D0%BF%D0%BE%D0%BB%D1%83%D0%B4%D0%BD%D1%8F.png "Лог")
 
 ## Установка
+В консоли Linux последовательно выполнить комманды:
 ```sh
 $ mkdir /srv
 $ cd /srv
@@ -15,9 +16,10 @@ $ git clone https://github.com/x0x01/astatum.git
 $ cd astatum
 $ chmod 777 static/img
 $ pip install -r requirements.txt
-Отредактировать config.py
+Отредактировать (при необходимости) config.py
 $ python astatum.py
 ```
+Если ошибок нет, то можно перейти по ссылке http://ip_вашего_сервера:8082/ в браузере (если в настройках config.py номер порта не менялся).
 
 ## Возможности
 - Трансляция полного текста статей в RSS
