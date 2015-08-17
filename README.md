@@ -1,14 +1,14 @@
 Astatum
 =======
 
-Простой self hosted Pocket/Readability сервис с хранением полного содержимого статьи
+Simple self hosted Pocket/Readability service with storage articles entirely.
 
-![](http://cl.ly/image/2J3A3q3x3f0P/Image%202014-07-18%20at%2010.03.44%20%D0%B4%D0%BE%20%D0%BF%D0%BE%D0%BB%D1%83%D0%B4%D0%BD%D1%8F.png "Главная")
+![](http://cl.ly/image/2J3A3q3x3f0P/Image%202014-07-18%20at%2010.03.44%20%D0%B4%D0%BE%20%D0%BF%D0%BE%D0%BB%D1%83%D0%B4%D0%BD%D1%8F.png "Main")
 
-![](http://cl.ly/image/2j1B1u2A3G45/Image%202014-07-18%20at%2010.04.18%20%D0%B4%D0%BE%20%D0%BF%D0%BE%D0%BB%D1%83%D0%B4%D0%BD%D1%8F.png "Лог")
+![](http://cl.ly/image/2j1B1u2A3G45/Image%202014-07-18%20at%2010.04.18%20%D0%B4%D0%BE%20%D0%BF%D0%BE%D0%BB%D1%83%D0%B4%D0%BD%D1%8F.png "Log")
 
-## Установка
-В консоли Linux последовательно выполнить комманды:
+## Installation
+Run this commands in Linux bash:
 ```sh
 $ mkdir /srv
 $ cd /srv
@@ -19,18 +19,14 @@ $ pip install -r requirements.txt
 Отредактировать (при необходимости) config.py
 $ python astatum.py
 ```
-Если ошибок нет, то можно перейти по ссылке http://ip_вашего_сервера:8082/ в браузере (если в настройках config.py номер порта не менялся).
+If installation was completed without error http://your_server_ip:8082/ in browser (you can change port number in file config.py).
 
-## Возможности
-- Трансляция полного текста статей в RSS
-- Кнопка "В закладки!", позволяющая сохранить открытую в браузере статью
-- Загрузка статей из RSS ленты
-- Локальное кэширование изображений
-- Для выдиления контента используется парсер readability
+## Features
+- Transmission full articles text to RSS
+- Button "To bookmarks!", that can save any articles in browser
+- Load articles from RSS
+- Local cache for images
+- Using `readability` for parsing HTML
 - Python, Flask, SQLAlchemy, Bootstrap 3
 
-## UseCase
-В [TinyTinyRSS](http://tt-rss.org/redmine/projects/tt-rss/wiki) есть собственная RSS лента избанных статей. 
-Подключаем ее к Astatum в config.py, выходную RSS ленту Astatum - добавляем в TinyTinyRSS (рекурсия!!!)
 
-Результат: когда в TinyTinyRSS статья отмечается как избранная, полное содержимое этой статьи загружается Astatum, после чего экспортируестя в ленту RSS. Которую, в свою очередь, удобно читать на мобильном устройстве, а упрощенная копия статьи будет доступна даже после удаления оригинальной ссылки (и больше никто не сможет убрать пост в черновики!)
